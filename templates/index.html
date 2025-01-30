@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palettify</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            padding: 20px 20px 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            margin: 0px 0px 20px;
+            padding: 10px;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+        }
+
+        .options form {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            align-items: center; /* Ensures labels and buttons are aligned horizontally */
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+        }
+
+        .options label {
+            margin-right: 5px; /* Adds spacing between the label and its associated element */
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        #playlist-link {
+            color: #1ED760;
+        }
+
+        #playlist-link:hover {
+            text-decoration: underline;
+        }
+
+        .color-blocks {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .color-block {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: 16px;
+            padding-left: 10px;
+            box-sizing: border-box;
+        }
+
+        .color-block span {
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .color-blocks {
+                flex-direction: row;
+                height: calc(100vh - 80px);
+            }
+
+            .color-block {
+                width: auto;
+                height: 100%;
+                margin-right: 0px;
+                justify-content: center;
+                align-items: flex-end;
+                text-align: center;
+                padding: 10px;
+            }
+        }
+
+        button, select, input {
+            background-color: rgba(51, 51, 51, 0.05);
+            border-radius: 8px;
+            border-width: 0;
+            color: #333333;
+            cursor: pointer;
+            display: inline-block;
+            font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 10px 12px;
+            text-align: center;
+            transition: all 200ms;
+            vertical-align: baseline;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>My Spotify Palette</h1>
+    <div class="options">
+        <form method="POST" action="/">
+            <label for="content_type">Content:</label>
+            <select name="content_type" id="content_type">
+                <option value="tracks" {% if content_type == 'tracks' %}selected{% endif %}>Top Tracks</option>
+                <option value="artists" {% if content_type == 'artists' %}selected{% endif %}>Top Artists</option>
+            </select>
+            <label for="time_range">Time Range:</label>
+            <select name="time_range" id="time_range">
+                <option value="short_term" {% if request.form.get('time_range') == 'short_term' %}selected{% endif %}>Short Term</option>
+                <option value="medium_term" {% if request.form.get('time_range') == 'medium_term' %}selected{% endif %}>Medium Term</option>
+                <option value="long_term" {% if request.form.get('time_range') == 'long_term' %}selected{% endif %}>Long Term</option>
+            </select>
+            <label for="limit">Limit:</label>
+            <input type="number" name="limit" value="{{ request.form.get('limit', 5) }}" min="1" max="10">
+            <button type="submit">Update</button>
+
+            {% if content_type == "tracks" %}
+            <button type="submit" name="create_playlist" value="true">Create Playlist</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="color-blocks">
+        {% for item in data %}
+        <div class="color-block" 
+             style="background-color: rgb({{ item['colors']['dominant'][0] }}, {{ item['colors']['dominant'][1] }}, {{ item['colors']['dominant'][2] }})" 
+             data-r="{{ item['colors']['dominant'][0] }}" 
+             data-g="{{ item['colors']['dominant'][1] }}" 
+             data-b="{{ item['colors']['dominant'][2] }}">
+            <span>
+                <a href="{{ item['url'] }}" target="_blank">{{ item['name'] }}</a><br>
+                #{{ '%02X%02X%02X' | format(item['colors']['dominant'][0], item['colors']['dominant'][1], item['colors']['dominant'][2]) }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if playlist_url %}
+    <div style="text-align: center; margin-top: 20px;">
+        <p>Playlist created! <a href="{{ playlist_url }}" target="_blank" id="playlist-link">Listen here</a></p>
+    </div>
+    {% endif %}
+
+    <script>
+        // Calculate color brightness
+        function getBrightness(r, g, b) {
+            return (r * 299 + g * 587 + b * 114) / 1000;
+        }
+
+        // Adjust text color based on brightness
+        document.querySelectorAll('.color-block').forEach(block => {
+            const r = parseInt(block.getAttribute('data-r'));
+            const g = parseInt(block.getAttribute('data-g'));
+            const b = parseInt(block.getAttribute('data-b'));
+
+            const brightness = getBrightness(r, g, b);
+            const textColor = brightness > 186 ? 'black' : 'white';
+            block.style.color = textColor;
+        });
+    </script>
+</body>
+</html>
