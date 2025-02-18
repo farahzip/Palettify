@@ -8,13 +8,6 @@ A Flask-based web application that connects to the Spotify API to analyze a user
 - Allows users to generate a playlist from their top tracks.  
 - Users can select time ranges and the number of items to fetch.  
 
-## Installation  
-
-### Prerequisites  
-Ensure you have the following installed:  
-- Python 3.x  
-- pip (Python package manager)  
-
 ### Setup  
 
 1. Clone the Repository  
